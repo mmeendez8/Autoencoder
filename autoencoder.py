@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import shutil
-import seaborn as sns
 
 
 # Network parameters
@@ -93,10 +92,7 @@ flat_output = tf.reshape(output, [-1, 28 * 28])
 flat_input = tf.reshape(input_batch, [-1, 28 * 28])
 
 with tf.name_scope('loss'):
-    # img_loss = tf.reduce_sum(tf.squared_difference(flat_output, flat_input))
     img_loss = tf.reduce_sum(flat_input * -tf.log(flat_output) + (1 - flat_input) * -tf.log(1 - flat_output), 1)
-    # z * -log(sigmoid(x)) + (1 - z) * -log(1 - sigmoid(x))
-    # img_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=flat_input, logits=flat_output),1)
     latent_loss = 0.5 * tf.reduce_sum(tf.square(mean_) + tf.square(std_dev) - tf.log(tf.square(std_dev)) - 1, 1)
     loss = tf.reduce_mean(img_loss + latent_loss)
     tf.summary.scalar('batch_loss', loss)
