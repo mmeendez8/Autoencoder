@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow import keras
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -8,7 +7,7 @@ import shutil
 import seaborn as sns
 from matplotlib.colors import ListedColormap
 
-sns.set()
+sns.set_style(style='white')
 
 # Network parameters
 tf.flags.DEFINE_float('learning_rate', .0005, 'Initial learning rate.')
@@ -69,7 +68,7 @@ def encoder(X):
         return z, mean_, std_dev
 
 
-def decoder(z, training=False):
+def decoder(z):
     activation = tf.nn.relu
     with tf.variable_scope("Decoder"):
         x = tf.layers.dense(z, units=FLAGS.inputs_decoder, activation=activation)
@@ -140,10 +139,11 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
                     flag = False
                     writer.add_summary(summ, epoch)
 
-                    # Create artificial image from unit norm
+                    # Create artificial image from unit norm sample
                     artificial_image = sess.run(output, feed_dict={z: np.random.normal(0, 1, (1, FLAGS.latent_dim))})
                     plt.figure()
-                    plt.imshow(artificial_image[0].reshape((28, 28)), cmap='gray')
+                    with sns.axes_style("white"):
+                        plt.imshow(artificial_image[0].reshape((28, 28)), cmap='gray')
                     plt.savefig(os.path.join(results_folder, 'Test/{}'.format(epoch)))
                     plt.close()
 
@@ -158,10 +158,27 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
                             cbar.ax.set_yticklabels(['T-shirt', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal',
                                                      'Shirt', 'Sneaker', 'Bag', 'Ankle boot'])
 
-                        plt.axis('off')
+                        # plt.axis('off')
                         plt.title('Latent space')
                         plt.savefig(os.path.join(results_folder, 'Test/Latent_{}'.format(epoch)))
                         plt.close()
 
             except tf.errors.OutOfRangeError:
                 break
+
+        # Create mesh grid of values
+        values = np.arange(-3, 4, .5)
+        xx, yy = np.meshgrid(values, values)
+        input_holder = np.zeros((1, 2))
+        # Matrix that will contain the grid of images
+        container = np.zeros((28 * len(values), 28 * len(values)))
+
+        for row in range(xx.shape[0]):
+            for col in range(xx.shape[1]):
+                input_holder[0, :] = [xx[row, col], yy[row, col]]
+                artificial_image = sess.run(output, feed_dict={z: input_holder})
+                container[row * 28: (row + 1) * 28, col * 28: (col + 1) * 28] = np.squeeze(artificial_image)
+
+        plt.imshow(container, cmap='gray')
+        plt.savefig(os.path.join(results_folder, 'Test/Space_{}'.format(epoch)))
+        plt.close(  )
