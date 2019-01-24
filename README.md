@@ -24,5 +24,10 @@ This repository contains an implementation of a Variational Autoencoder. See in 
 $ python autoencoder.py  --latent_dim=2 --dataset=mnist --epochs=50
 ```
 
+### Example
+
+![latent_space](Images/fashion_space.png)
+![fake_fashion](Images/fake_fashion.png)
+
 
 
